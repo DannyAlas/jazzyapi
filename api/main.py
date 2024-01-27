@@ -1,13 +1,16 @@
-import drawsvg as draw
-from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse, StreamingResponse, JSONResponse
-import redis
 import json
+
+import drawsvg as draw
+import redis
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
+
 from api.utils import get_characters_and_times
 
-redcon = redis.Redis(host='10.32.32.20', port=6379, db=0)
+redcon = redis.Redis(host="10.32.32.20", port=6379, db=0)
 
 app = FastAPI()
+
 
 @app.get("/")
 async def read_item(request: Request):
@@ -94,9 +97,9 @@ def main(
 
 @app.get("/profile-counter")
 def get_counter() -> StreamingResponse:
-    redcon.incr('profile-counter')
+    redcon.incr("profile-counter")
     # creeate a quick text incrementing counteruvi
-    count = redcon.get('profile-counter').decode('utf-8')
+    count = redcon.get("profile-counter").decode("utf-8")
     len_l = len("Profile views") * 5.5 + 4
     len_r = len(str(count)) * 5.5 * 1.5
     svg_len = len_l + len_r + 4
@@ -111,23 +114,67 @@ def get_counter() -> StreamingResponse:
     grad.add_stop(1, "#000", opacity=".1")
     d.append(grad)
     mask = draw.Mask(id="a")
-    mask.append(draw.Rectangle(x=0, y=0, width=svg_len, height=20, mask="url(#a)", fill="#fff", rx="3"))
+    mask.append(
+        draw.Rectangle(
+            x=0, y=0, width=svg_len, height=20, mask="url(#a)", fill="#fff", rx="3"
+        )
+    )
     d.append(mask)
     # <rect width="120.7" height="20" fill="url(#b)"/>
-    d.append(draw.Rectangle(len_l, 0, svg_len - len_l, 20, fill="#f88469", mask="url(#a)"))
-    l = draw.Text("Profile views", font_size=11, x=.6, y=15, font_family="Verdana", font_weight=400, fill="#fff")
-    r = draw.Text(count, font_size=11, x=len_l + 4, y=15, width=len_r, font_family="Verdana", font_weight=400, fill="#fff")
-    d.append(draw.Text("Profile views", font_size=11, x=.6, y=16, font_family="Verdana", font_weight=400, fill="#000", opacity=".3"))
-    d.append(draw.Text(count, font_size=11, x=len_l + 4, y=16, width=len_r, font_family="Verdana", font_weight=400, fill="#000", opacity=".3"))
+    d.append(
+        draw.Rectangle(len_l, 0, svg_len - len_l, 20, fill="#f88469", mask="url(#a)")
+    )
+    l = draw.Text(
+        "Profile views",
+        font_size=11,
+        x=0.6,
+        y=15,
+        font_family="Verdana",
+        font_weight=400,
+        fill="#fff",
+    )
+    r = draw.Text(
+        count,
+        font_size=11,
+        x=len_l + 4,
+        y=15,
+        width=len_r,
+        font_family="Verdana",
+        font_weight=400,
+        fill="#fff",
+    )
+    d.append(
+        draw.Text(
+            "Profile views",
+            font_size=11,
+            x=0.6,
+            y=16,
+            font_family="Verdana",
+            font_weight=400,
+            fill="#000",
+            opacity=".3",
+        )
+    )
+    d.append(
+        draw.Text(
+            count,
+            font_size=11,
+            x=len_l + 4,
+            y=16,
+            width=len_r,
+            font_family="Verdana",
+            font_weight=400,
+            fill="#000",
+            opacity=".3",
+        )
+    )
     d.append(draw.Rectangle(0, 0, len_l, 20, fill="#555", mask="url(#a)"))
     d.append(l)
     # drop shadow
     d.append(r)
     d.append(draw.Rectangle(0, 0, svg_len, 20, fill="url(#b)"))
+
     def iter():
         yield d.as_svg()
 
     return StreamingResponse(iter(), media_type="image/svg+xml")
-
-
-    

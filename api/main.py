@@ -1,9 +1,7 @@
-import json
-
 import drawsvg as draw
 import redis
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import RedirectResponse, StreamingResponse
 
 from api.utils import get_characters_and_times
 
@@ -127,7 +125,7 @@ def get_counter() -> StreamingResponse:
     l = draw.Text(
         "Profile views",
         font_size=11,
-        x=0.6,
+        x=3,
         y=15,
         font_family="Verdana",
         font_weight=400,
@@ -147,7 +145,7 @@ def get_counter() -> StreamingResponse:
         draw.Text(
             "Profile views",
             font_size=11,
-            x=0.6,
+            x=3,
             y=16,
             font_family="Verdana",
             font_weight=400,

@@ -5,6 +5,7 @@ import drawsvg as draw
 import redis
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
 
 from api.models import EmbedInfo, JSONDecoder, Phrase
@@ -13,6 +14,14 @@ from api.utils import get_characters_and_times
 redcon = redis.Redis(host="10.32.32.20", port=6379, db=0)
 
 app = FastAPI()
+# cors
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")

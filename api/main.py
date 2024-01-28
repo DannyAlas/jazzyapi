@@ -1,8 +1,13 @@
+import json
+from typing import Union
+
 import drawsvg as draw
 import redis
 from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
 
+from api.models import EmbedInfo, JSONDecoder, Phrase
 from api.utils import get_characters_and_times
 
 redcon = redis.Redis(host="10.32.32.20", port=6379, db=0)
@@ -178,20 +183,31 @@ def get_counter() -> StreamingResponse:
 
     return StreamingResponse(iter(), media_type="image/svg+xml")
 
+
 @app.get("/dgg/phrases")
 def get_dgg_phrases() -> JSONResponse:
     phrases = redcon.get("dgg_phrase_cache")
     if phrases:
         import json
+
         return JSONResponse(status_code=200, content=json.loads(phrases))
     else:
         return JSONResponse(status_code=404, content={"error": "Not found"})
 
+
+# add query param to get only the top n embeds, default to 10
 @app.get("/dgg/embeds")
-def get_dgg_embeds() -> JSONResponse:
+def get_dgg_embeds(
+    max: int = 10, is_live_only: bool = False, platform: Union[str, None] = None
+) -> JSONResponse:
     embeds = redcon.get("dgg_embeds_cache")
-    if embeds:
-        import json
-        return JSONResponse(status_code=200, content=json.loads(embeds))
-    else:
-        return JSONResponse(status_code=404, content={"error": "Not found"})
+    lst = json.loads(embeds, cls=JSONDecoder)
+    embeds = [EmbedInfo(**x) for x in lst]
+    embeds.sort(key=lambda x: x.watchers, reverse=True)
+    if is_live_only:
+        embeds = [x for x in embeds if x.type == "live"]
+    if platform:
+        embeds = [x for x in embeds if x.platform.lower() == platform.lower()]
+    embeds = embeds[:max]
+    embeds = jsonable_encoder(embeds)
+    return JSONResponse(status_code=200, content=embeds)

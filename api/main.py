@@ -1,7 +1,7 @@
 import drawsvg as draw
 import redis
 from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse, StreamingResponse
+from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
 
 from api.utils import get_characters_and_times
 
@@ -24,6 +24,7 @@ def main(
     duration: int = 5000,
     color: str = "36BCF7FF",
     background: str = "00000000",
+    repeat: bool = False,
     center: bool = False,
     vCenter: bool = True,
     multiline: bool = False,
@@ -176,3 +177,21 @@ def get_counter() -> StreamingResponse:
         yield d.as_svg()
 
     return StreamingResponse(iter(), media_type="image/svg+xml")
+
+@app.get("/dgg/phrases")
+def get_dgg_phrases() -> JSONResponse:
+    phrases = redcon.get("dgg_phrase_cache")
+    if phrases:
+        import json
+        return JSONResponse(status_code=200, content=json.loads(phrases))
+    else:
+        return JSONResponse(status_code=404, content={"error": "Not found"})
+
+@app.get("/dgg/embeds")
+def get_dgg_embeds() -> JSONResponse:
+    embeds = redcon.get("dgg_embeds_cache")
+    if embeds:
+        import json
+        return JSONResponse(status_code=200, content=json.loads(embeds))
+    else:
+        return JSONResponse(status_code=404, content={"error": "Not found"})
